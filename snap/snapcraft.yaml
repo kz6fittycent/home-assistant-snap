@@ -1,6 +1,10 @@
 name: home-assistant-snap
 title: Home assistant
+<<<<<<< HEAD
 version: '2025.6.1'
+=======
+version: '2024.11.3'
+>>>>>>> origin/master
 icon: snap/gui/home-assistant-snap.svg
 summary: Open source home automation that puts local control and privacy first
 description: |
@@ -13,7 +17,7 @@ description: |
   - https://en.wikipedia.org/wiki/Home_Assistant
   - https://www.home-assistant.io/
 
-  **NOTE!** This is Home Assistant Core (not Supervised). 
+  **NOTE!** This is Home Assistant Core (not Supervised).
 
   Your new installation will be available through your browser at http://localhost:8123/ (or any other IP address where this packages is installed). You will get a launcher available in your application menu on desktops.
 
@@ -70,18 +74,30 @@ description: |
 # donation: "https://www.paypal.com/donate/?hosted_button_id=69NA8SXXFBDBN"
 license: Apache-2.0
 
-base: core20
+base: core24
 grade: stable
 confinement: strict
 
-architectures:
-  - build-on: amd64
-  - build-on: arm64
-  - build-on: armhf
+platforms:
+  amd64:
+  arm64:
+  # armhf:
+  #   build-on: [arm64]
+  #   build-for: [armhf]
+
+# architectures:
+#   - build-on: amd64
+#     build-for: amd64
+#   - build-on: arm64
+#     build-for: arm64
+#   - build-on: arm64
+#     build-for: armhf
 
 layout:
   /usr/local/lib:
-    bind: $SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
+    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
+  /usr/lib:
+    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
   /etc/pip.conf:
     bind-file: $SNAP_COMMON/pip.conf
   /etc/openzwave:
@@ -126,6 +142,7 @@ apps:
     environment:
       PIP_USER: 1
       PIP_ROOT_USER_ACTION: ignore
+      #PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
     restart-condition: always
     plugs: 
       - bluez
@@ -139,10 +156,12 @@ apps:
       - removable-media
     slots: 
       - components
+
   open-localhost:
     command: bin/open-localhost
     plugs:
       - desktop
+
   check-config:
     plugs: 
       - network
@@ -168,17 +187,27 @@ parts:
         #- lib32stdc++6
 
   homeassistant:
-    plugin: python-wot-plugin
+    plugin: python #-wot-plugin
     source: https://github.com/home-assistant/core.git
-    source-tag: ${SNAPCRAFT_PROJECT_VERSION}
+    source-tag: $SNAPCRAFT_PROJECT_VERSION
+
     build-environment:
+<<<<<<< HEAD
       - SNAPCRAFT_PYTHON_INTERPRETER: python3.13
+=======
+      - PARTS_PYTHON_INTERPRETER: python3.12
+
+>>>>>>> origin/master
     python-packages:
       - setuptools #<58
       - wheel
       - Cython
       - pip
       - build
+
+    python-requirements:  [requirements_all.txt]
+    python-constraints:   [homeassistant/package_constraints.txt]
+    
     build-packages:
       - autoconf
       - build-essential
@@ -189,7 +218,6 @@ parts:
       - libavdevice-dev
       - libavfilter-dev
       - libavformat-dev
-      - libavresample-dev # Needed?
       - libavutil-dev
       - libcrypt-dev
       - libffi-dev
@@ -205,22 +233,26 @@ parts:
       - libxml2-dev
       - libxslt1-dev
       - pkg-config
+<<<<<<< HEAD
       - python3.13-dev
+=======
+      - python3.12-dev
+      #- python3.12-venv
+>>>>>>> origin/master
       - zlib1g-dev
       # - on arm64:
       #   - cargo
       #   - rustc
-      - on armhf:
-        - gfortran
-        - libatlas-base-dev
-        - rustc
       #   - cargo
       #   - rustc
-      # - on ppc64el:
-      #   - cargo
-      #   - rustc
+    override-build: |
+      set -x
+      CWD="$(pwd)"
+      cd "${CRAFT_PART_BUILD}" && ${PARTS_PYTHON_INTERPRETER} -m script.translations develop --all && cd "${CWD}"
+      craftctl default
+    
     stage-packages:
-      - freeglut3
+      # - freeglut3 => alternative?
       - ffmpeg
       - libglu1-mesa
       - libpcap0.8
@@ -230,6 +262,7 @@ parts:
       - netbase
       - tcpdump
       - zlib1g
+<<<<<<< HEAD
       - python3.13-venv
       - nmap
     stage:
@@ -259,23 +292,52 @@ parts:
     source-type: local
     organize:
       '*': lib/python3.13/site-packages/homeassistant/components/
+=======
+      - python3.12-venv
+      #- python3.12-minimal
+      - nmap
+    # stage:
+    #   - -lib/$PARTS_PYTHON_INTERPRETER/site-packages/homeassistant/components/updater
+    #   - -lib/$PARTS_PYTHON_INTERPRETER/site-packages/aiogithubapi*
+    #   - -lib/$PARTS_PYTHON_INTERPRETER/site-packages/icalendar*
+    override-stage: |
+      craftctl default 
+      # find "${CRAFT_STAGE}/bin" -type f -executable -exec sed -i 's/!\/usr\/bin\/env python3.12/!\/usr\/bin\/env python3/' {} \;
+      sed -i 's/include-system-site-packages = false/include-system-site-packages = true/g' "${CRAFT_STAGE}/pyvenv.cfg"
+      sed -i "${CRAFT_PART_INSTALL}/pyvenv.cfg" \
+          -e 's@^home = '"${CRAFT_STAGE}"'/usr/bin$@home = /snap/$SNAPCRAFT_PROJECT_NAME/current/usr/bin@g'
+      sed -i '\,^executable = ,d' "${CRAFT_PART_INSTALL}/pyvenv.cfg"
+      sed -i '\,^command = ,d' "${CRAFT_PART_INSTALL}/pyvenv.cfg"
+
+  # debug-killer:
+  #   after: [homeassistant]
+  #   plugin: nil
+  #   override-prime: |
+  #     exit 0
+
+  # updater:
+  #   after: [homeassistant]
+  #   plugin: dump
+  #   source: ./src/components
+  #   source-type: local
+  #   organize:
+  #     '*': lib/python3.12/site-packages/homeassistant/components/
+
+>>>>>>> origin/master
   bins:
     plugin: dump
     source: ./src/bin
     source-type: local
     organize:
       open-localhost: bin/open-localhost
+
   hooks:
     plugin: dump
     source: ./src/hooks
     source-type: local
-    stage-packages:
-      - uuid
     organize:
-      install: snap/hooks/install
-      configure: snap/hooks/configure
-      post-refresh: snap/hooks/post-refresh
       connect-plug-bin: snap/hooks/connect-plug-bin
+
   config:
     plugin: dump
     source: ./src/config
