@@ -81,7 +81,7 @@ architectures:
 
 package-repositories:
   - type: apt
-    ppa:deadsnakes/ppa 
+    ppa: deadsnakes/ppa 
 
 layout:
   /usr/local/lib:
