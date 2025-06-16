@@ -79,6 +79,10 @@ architectures:
   - build-on: arm64
   - build-on: armhf
 
+package-repositories:
+  - type: apt
+    ppa:deadsnakes/ppa 
+
 layout:
   /usr/local/lib:
     bind: $SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
@@ -172,7 +176,7 @@ parts:
     source: https://github.com/home-assistant/core.git
     source-tag: ${SNAPCRAFT_PROJECT_VERSION}
     build-environment:
-      - SNAPCRAFT_PYTHON_INTERPRETER: python3.11
+      - SNAPCRAFT_PYTHON_INTERPRETER: python3.13
     python-packages:
       - setuptools #<58
       - wheel
@@ -205,7 +209,7 @@ parts:
       - libxml2-dev
       - libxslt1-dev
       - pkg-config
-      - python3.11-dev
+      - python3.13-dev
       - zlib1g-dev
       # - on arm64:
       #   - cargo
@@ -230,12 +234,12 @@ parts:
       - netbase
       - tcpdump
       - zlib1g
-      - python3.11-venv
+      - python3.13-venv
       - nmap
     stage:
-      - -lib/python3.11/site-packages/homeassistant/components/updater
-      - -lib/python3.11/site-packages/aiogithubapi*
-      - -lib/python3.11/site-packages/icalendar*
+      - -lib/python3.13/site-packages/homeassistant/components/updater
+      - -lib/python3.13/site-packages/aiogithubapi*
+      - -lib/python3.13/site-packages/icalendar*
     requirements:
       - requirements.txt
       - requirements_all.txt
